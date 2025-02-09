@@ -5,18 +5,13 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.Image;
-import javafx.stage.FileChooser;
-import javafx.stage.Window;
-
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-
 import com.project.model.ClothingItem;
 
 public class MainController {
@@ -49,11 +44,12 @@ public class MainController {
 
         Button checkWeather = new Button("Suggest Outfit for Weather");
         checkWeather.setStyle("-fx-font-size: 20px; -fx-padding: 10px;");
+        checkWeather.setOnAction(evt -> handleSuggestOutfitForWeather());
 
         //buttons placed horizontally
         HBox wardrobeOptions = new HBox(10);
         wardrobeOptions.setAlignment(Pos.CENTER);
-        wardrobeOptions.getChildren().addAll(viewWardrobeButton, createOutfitButton, addClothingItemButton, checkWeather);
+        wardrobeOptions.getChildren().addAll(viewWardrobeButton, createOutfitButton, checkWeather, addClothingItemButton);
 
         //add HBox to the main VBox
         mainVBox.getChildren().add(wardrobeOptions);
@@ -62,67 +58,10 @@ public class MainController {
     }
 
     private void handleAddItem() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Images", "*.jpg", "*.png", "*.jpeg"));
-        fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
-        Window window = mainVBox.getScene().getWindow(); //get curr window
-        File selectedFile = fileChooser.showOpenDialog(window); //open file dialog
-        if (selectedFile != null) {
-            ChoiceBox<String> categoryChoiceBox = new ChoiceBox<>();
-            categoryChoiceBox.getItems().addAll(
-                            "Jeans", "Pants", "Shorts",
-                                 "T-Shirt", "Skirt", "Jacket",
-                                 "Sweater", "Shirt", "Dress",
-                                 "Shoes", "Hats", "Belts",
-                                 "Socks", "Scarves", "Gloves",
-                                 "Bags", "Other Accessories"
-                           );
-            categoryChoiceBox.setValue("Jeans"); //default category
-            categoryChoiceBox.getSelectionModel().selectFirst();
-            Label colorLabel = new Label("Choose the colours:");
-            Label chosenColoursLabel = new Label("Selected colours: None");
-            HBox colourOptions = new HBox(10);
-            List<String> selectedColours = new ArrayList<>();
-            String[] colours = {
-                    "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FFA500", "#800080",
-                    "#FFFFFF", "#000000", "#808080", "#FFC0CB", "#ADD8E6", "#FFD700",
-                    "#8B0000", "#2E8B57", "#4682B4", "#4B0082", "#DAA520", "#A52A2A"
-            };
-            String[] colourNames = {
-                    "Red", "Green", "Blue", "Yellow", "Orange", "Purple", "White", "Black",
-                    "Gray", "Pink", "Light Blue", "Gold", "Dark Red", "Sea Green",
-                    "Steel Blue", "Indigo", "Goldenrod", "Brown"
-            };
-            for (int i = 0; i < colours.length; i++) {
-                final int index = i;
-                Button colourButton = new Button();
-                colourButton.setStyle("-fx-background-color: " + colours[index] + "; -fx-min-width: 30px; -fx-min-height: 30px;");
-                colourButton.setOnAction(evt -> {
-                    if (selectedColours.contains(colours[index])) {
-                        selectedColours.remove(colours[index]);
-                    } else {
-                        selectedColours.add(colours[index]);
-                    }
-                    chosenColoursLabel.setText("Selected colours: " + (selectedColours.isEmpty() ? "None" : String.join(", ", selectedColours.stream().map(c -> colourNames[findColourIndex(colours, c)]).toList())));
-                });
-                colourOptions.getChildren().add(colourButton);
-            }
-            Button saveButton = new Button("Save");
-            saveButton.setOnAction(evt -> {
-                String category = categoryChoiceBox.getValue();
-                if (selectedColours.isEmpty() || category == null || category.trim().isEmpty()) {
-                    chosenColoursLabel.setText("Please select a valid category and at least one colour");
-                    return;
-                }
-                wardrobe.add(new ClothingItem(selectedFile, category, selectedColours));
-                chosenColoursLabel.setText("Clothing item saved successfully.");
-                displayWardrobe();
-            });
-            //update UI
-            mainVBox.getChildren().clear();
-            mainVBox.getChildren().addAll(new Label("File: " +  selectedFile.getName()), new Label("Selected Category:"), categoryChoiceBox, colorLabel, colourOptions, chosenColoursLabel, saveButton);
-        }
+        AddClothingController addClothingController = new AddClothingController(mainVBox, wardrobe);
+        addClothingController.handleAddItem();
     }
+
     private void displayImages(String categoryFilter, List<String> colourFilter) {
         mainVBox.getChildren().clear();
 
@@ -134,12 +73,13 @@ public class MainController {
         ChoiceBox<String> categoryChoiceBox = new ChoiceBox<>();
         categoryChoiceBox.getItems().addAll(
                 "Jeans", "Pants", "Shorts",
-                "T-Shirt", "Skirt", "Jacket",
-                "Sweater", "Shirt", "Dress",
-                "Shoes", "Hats", "Belts",
-                "Socks", "Scarves", "Gloves",
-                "Bags", "Other Accessories"
+                "T-Shirt", "Skirt", "Light Jacket", "Winter Jacket",
+                "Heavy Coat", "Sweater", "Shirt", "Dress",
+                "Sneakers", "Sandals", "Boots",
+                "Hat", "Belt", "Socks",
+                "Scarf", "Gloves", "Bag", "Other Accessories"
         );
+
         categoryChoiceBox.setValue("All Categories");
 
         ChoiceBox<String> colourChoiceBox = new ChoiceBox<>();
@@ -174,11 +114,11 @@ public class MainController {
                     //map the user-selected color names to the corresponding hex codes
                     List<String> selectedColorsHex = colourFilter.stream()
                             .map(this::mapColorNameToHex)
-                            .collect(Collectors.toList());
+                            .toList();
                     //check if any of the item's colors match the selected hex codes
                     return item.getColours().stream().anyMatch(selectedColorsHex::contains);
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         for (ClothingItem item : filteredItems) {
             ImageView imageView = new ImageView(new Image(item.getImageFile().toURI().toString()));
@@ -187,7 +127,10 @@ public class MainController {
             imagesContainer.getChildren().add(imageView);
         }
 
-        mainVBox.getChildren().addAll(filterBox, imagesContainer);
+        Button backButton = new Button("Back to Main Menu");
+        backButton.setOnAction(evt -> displayWardrobe());
+
+        mainVBox.getChildren().addAll(filterBox, imagesContainer, backButton);
     }
 
     private String mapColorNameToHex(String colorName) {
@@ -212,14 +155,148 @@ public class MainController {
         return null;
     }
 
-
-    //helper method to find the index of the colour
-    private int findColourIndex(String[] colours, String colour) {
-        for (int i = 0; i < colours.length; i++) {
-            if (colours[i].equals(colour)) {
-                return i;
+    private void handleSuggestOutfitForWeather() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("City Input");
+        dialog.setHeaderText("Enter your city");
+        dialog.setContentText("City:");
+        dialog.showAndWait().ifPresent(city -> {
+            if (!city.trim().isEmpty()) {
+                // fetch weather summary from the weather class
+                String weatherSummary = Weather.getWeatherSummary(city.trim());
+                if (!weatherSummary.isEmpty()) {
+                    // City found, display weather summary and outfit
+                    displayWeatherSummaryAndOutfit(weatherSummary, city.trim());
+                } else {
+                    //city was not found
+                    Label errorLabel = new Label("The city is not found. You entered \"" + city + "\", maybe you miswrote it. Check and try once again.");
+                    Button backButton = new Button("Back to Main Menu");
+                    backButton.setOnAction(evt -> displayWardrobe());
+                    mainVBox.getChildren().clear();
+                    mainVBox.getChildren().addAll(errorLabel, backButton);
+                }
+            } else {
+                // empty city name
+                Label errorLabel = new Label("City name is invalid. Please try again.");
+                Button backButton = new Button("Back to Main Menu");
+                backButton.setOnAction(evt -> displayWardrobe());
+                mainVBox.getChildren().clear();
+                mainVBox.getChildren().addAll(errorLabel, backButton);
             }
+        });
+    }
+
+    private void displayWeatherSummaryAndOutfit(String weatherSummary, String city) {
+        mainVBox.getChildren().clear();
+        // sisplay the full weather summary
+        Label weatherLabel = new Label("Weather Summary: " + weatherSummary);
+        weatherLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        // extract temperature as string
+        String temperature = extractTemperatureFromSummary(weatherSummary);
+        // suggest outfit based on temperature
+        String outfitSuggestion = suggestOutfitBasedOnTemperature(temperature);
+        // display the outfit suggestion
+        Label outfitLabel = new Label("Based on this, we suggest you wear: " + outfitSuggestion);
+        outfitLabel.setStyle("-fx-font-size: 14px;");
+
+        // show items in the wardrobe based on temperature
+        if (temperature.equals("unavailable") || temperature.equals("-")) {
+            displayImagesForWeather("-");
+        } else {
+            displayImagesForWeather(Double.parseDouble(temperature));
         }
-        return -1; //not found
+        Button backButton = new Button("Back to Main Menu");
+        backButton.setOnAction(evt -> displayWardrobe());
+
+        VBox suggestionBox = new VBox(10);
+        suggestionBox.setAlignment(Pos.CENTER);
+        suggestionBox.getChildren().addAll(weatherLabel, outfitLabel, backButton);
+        mainVBox.getChildren().add(suggestionBox);
+    }
+
+    private String extractTemperatureFromSummary(String weatherSummary) {
+        try {
+            String searchString = "current temperature: ";
+            int tempStartIndex = weatherSummary.indexOf(searchString) + searchString.length();
+            int tempEndIndex = weatherSummary.indexOf("°C", tempStartIndex);
+            if (tempStartIndex > 0 && tempEndIndex > tempStartIndex) {
+                String tempStr = weatherSummary.substring(tempStartIndex, tempEndIndex).trim();
+                Double.parseDouble(tempStr); // ensure it is a valid number
+                return tempStr; // return the temperature value as a string
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "unavailable";
+    }
+
+    private String suggestOutfitBasedOnTemperature(String temperature) {
+        try {
+            double tempValue = Double.parseDouble(temperature); //validate and use the numeric value
+            if (tempValue >= 30) {
+                return "a T-shirt, Shorts, and Sandals";
+            } else if (tempValue >= 20) {
+                return "a T-shirt, Jeans, and Sneakers";
+            } else if (tempValue >= 10) {
+                return "a Sweater, Pants, and a Light Jacket";
+            } else if (tempValue >= 0) {
+                return "a Winter Jacket, Sweater, Boots, and Gloves";
+            } else {
+                return "a Heavy Coat, Winter Boots, Scarf, and Gloves";
+            }
+        } catch (NumberFormatException e) {
+            return "Weather data unavailable, so dress comfortably for uncertain conditions";
+        }
+    }
+
+    private void displayImagesForWeather(Object temperature) {
+        mainVBox.getChildren().clear();
+
+        VBox imagesContainer = new VBox(10);
+        imagesContainer.setAlignment(Pos.CENTER);
+
+        Label temperatureLabel;
+        if (temperature.equals("-")) {
+            temperatureLabel = new Label("Temperature: -");
+        } else {
+            temperatureLabel = new Label("Temperature: " + temperature + "°C");
+        }
+        temperatureLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+
+        List<ClothingItem> filteredItems;
+        if (temperature.equals("-")) {
+            filteredItems = wardrobe; // no filtering for unavailable temperature
+        } else {
+            double tempValue = (double) temperature;
+            filteredItems = wardrobe.stream()
+                    .filter(item -> {
+                        String category = item.getCategory();
+                        if (tempValue >= 30) {
+                            return category.equals("T-Shirt") || category.equals("Shorts") || category.equals("Shirt") || category.equals("Sandals") || category.equals("Pants") || category.equals("Dress") || category.equals("Hat");
+                        } else if (tempValue >= 20) {
+                            return category.equals("T-Shirt") || category.equals("Jeans") || category.equals("Shirt") || category.equals("Skirt") || category.equals("Dress") || category.equals("Sneakers") || category.equals("Pants");
+                        } else if (tempValue >= 10) {
+                            return category.equals("Sweater") || category.equals("Pants") || category.equals("Light Jacket");
+                        } else if (tempValue >= 0) {
+                            return category.equals("Winter Jacket") || category.equals("Sweater") || category.equals("Boots") || category.equals("Gloves");
+                        } else {
+                            return category.equals("Heavy Coat") || category.equals("Boots") || category.equals("Scarf") || category.equals("Gloves");
+                        }
+                    })
+                    .toList();
+        }
+
+        for (ClothingItem item : filteredItems) {
+            ImageView imageView = new ImageView(new Image(item.getImageFile().toURI().toString()));
+            imageView.setFitWidth(150);
+            imageView.setFitHeight(150);
+            imagesContainer.getChildren().add(imageView);
+        }
+        if (filteredItems.isEmpty()) {
+            Label noItemsLabel = new Label("No matching wardrobe items found for the current weather.");
+            noItemsLabel.setStyle("-fx-font-size: 14px; -fx-font-style: italic;");
+            imagesContainer.getChildren().add(noItemsLabel);
+        }
+        mainVBox.getChildren().addAll(temperatureLabel, imagesContainer);
     }
 }
