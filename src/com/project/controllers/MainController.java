@@ -12,6 +12,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.Image;
 import java.util.ArrayList;
 import java.util.List;
+import javafx.scene.control.ScrollPane;
 import com.project.model.ClothingItem;
 
 public class MainController {
@@ -21,16 +22,18 @@ public class MainController {
     private final List<ClothingItem> wardrobe = new ArrayList<>();
 
     @FXML
-    public void initialize(){
+    public void initialize() {
         System.out.println("Welcome to the Virtual Wardrobe Organizer!");
     }
+
     @FXML
     public void handleStartOrganizing() {
         System.out.println("Start Organizing button clicked!");
         displayWardrobe();
     }
+
     public void displayWardrobe() {
-        //clear the main Vbox
+        // clear the main VBox
         mainVBox.getChildren().clear();
         //buttons on the main page
         Button viewWardrobeButton = new Button("View Your Wardrobe");
@@ -41,6 +44,7 @@ public class MainController {
 
         Button createOutfitButton = new Button("Create an Outfit");
         createOutfitButton.setStyle("-fx-font-size: 20px; -fx-padding: 10px;");
+        createOutfitButton.setOnAction(evt -> handleSuggestOutfit());
 
         Button checkWeather = new Button("Suggest Outfit for Weather");
         checkWeather.setStyle("-fx-font-size: 20px; -fx-padding: 10px;");
@@ -57,16 +61,23 @@ public class MainController {
         viewWardrobeButton.setOnAction(evt -> displayImages(null, null)); //show wardrobe without filters
     }
 
+    private void handleSuggestOutfit() {
+        Button backButton = new Button("Back to Main Menu");
+        backButton.setOnAction(evt -> displayWardrobe());
+        OutfitSuggestionController outfitSuggestionController = new OutfitSuggestionController(mainVBox, wardrobe, backButton);
+        outfitSuggestionController.handleSuggestOutfit();
+    }
+
     private void handleAddItem() {
-        AddClothingController addClothingController = new AddClothingController(mainVBox, wardrobe);
+        AddClothingController addClothingController = new AddClothingController(mainVBox, wardrobe, this);
         addClothingController.handleAddItem();
     }
 
     private void displayImages(String categoryFilter, List<String> colourFilter) {
         mainVBox.getChildren().clear();
 
-        VBox imagesContainer = new VBox(10);
-        imagesContainer.setAlignment(Pos.CENTER);
+        VBox container = new VBox(10);
+        container.setAlignment(Pos.CENTER);
         HBox filterBox = new HBox(10);
         filterBox.setAlignment(Pos.CENTER);
 
@@ -79,7 +90,6 @@ public class MainController {
                 "Hat", "Belt", "Socks",
                 "Scarf", "Gloves", "Bag", "Other Accessories"
         );
-
         categoryChoiceBox.setValue("All Categories");
 
         ChoiceBox<String> colourChoiceBox = new ChoiceBox<>();
@@ -102,35 +112,50 @@ public class MainController {
             );
         });
 
-        filterBox.getChildren().addAll(new Label("Category:"), categoryChoiceBox, new Label("Colour:"), colourChoiceBox, applyFilterButton);
+        filterBox.getChildren().addAll(
+                new Label("Category:"), categoryChoiceBox,
+                new Label("Colour:"), colourChoiceBox,
+                applyFilterButton
+        );
 
         //filtering logic
         List<ClothingItem> filteredItems = wardrobe.stream()
-                .filter(item -> (categoryFilter == null || item.getCategory().equals(categoryFilter))) //filter by category
+                .filter(item -> (categoryFilter == null || item.getCategory().equals(categoryFilter)))
                 .filter(item -> {
                     if (colourFilter == null || colourFilter.isEmpty()) {
-                        return true; //no color filter applied
+                        return true;
                     }
-                    //map the user-selected color names to the corresponding hex codes
                     List<String> selectedColorsHex = colourFilter.stream()
                             .map(this::mapColorNameToHex)
                             .toList();
-                    //check if any of the item's colors match the selected hex codes
                     return item.getColours().stream().anyMatch(selectedColorsHex::contains);
                 })
                 .toList();
+
+        //display images in an HBox
+        HBox imagesHBox = new HBox(10);
+        imagesHBox.setAlignment(Pos.CENTER);
 
         for (ClothingItem item : filteredItems) {
             ImageView imageView = new ImageView(new Image(item.getImageFile().toURI().toString()));
             imageView.setFitWidth(150);
             imageView.setFitHeight(150);
-            imagesContainer.getChildren().add(imageView);
+            imagesHBox.getChildren().add(imageView);
         }
 
+        //wrap the HBox in a ScrollPane
+        ScrollPane scrollPane = new ScrollPane(imagesHBox);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+
+        //add back button
         Button backButton = new Button("Back to Main Menu");
         backButton.setOnAction(evt -> displayWardrobe());
 
-        mainVBox.getChildren().addAll(filterBox, imagesContainer, backButton);
+        //add all components to the main container
+        container.getChildren().addAll(filterBox, scrollPane, backButton);
+        mainVBox.getChildren().add(container);
     }
 
     private String mapColorNameToHex(String colorName) {
@@ -188,7 +213,7 @@ public class MainController {
 
     private void displayWeatherSummaryAndOutfit(String weatherSummary, String city) {
         mainVBox.getChildren().clear();
-        // sisplay the full weather summary
+        // display the full weather summary
         Label weatherLabel = new Label("Weather Summary: " + weatherSummary);
         weatherLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
         // extract temperature as string
@@ -286,17 +311,26 @@ public class MainController {
                     .toList();
         }
 
+        HBox imagesHBox = new HBox(10);
+        imagesHBox.setAlignment(Pos.CENTER);
+
         for (ClothingItem item : filteredItems) {
             ImageView imageView = new ImageView(new Image(item.getImageFile().toURI().toString()));
             imageView.setFitWidth(150);
             imageView.setFitHeight(150);
-            imagesContainer.getChildren().add(imageView);
+            imagesHBox.getChildren().add(imageView);
         }
         if (filteredItems.isEmpty()) {
             Label noItemsLabel = new Label("No matching wardrobe items found for the current weather.");
             noItemsLabel.setStyle("-fx-font-size: 14px; -fx-font-style: italic;");
-            imagesContainer.getChildren().add(noItemsLabel);
+            imagesHBox.getChildren().add(noItemsLabel);
         }
-        mainVBox.getChildren().addAll(temperatureLabel, imagesContainer);
+
+        ScrollPane scrollPane = new ScrollPane(imagesHBox);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+
+        mainVBox.getChildren().addAll(temperatureLabel, scrollPane);
     }
 }

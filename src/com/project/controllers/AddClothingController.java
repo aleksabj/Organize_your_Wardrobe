@@ -3,31 +3,38 @@ package com.project.controllers;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
+import javafx.geometry.Pos;
 import com.project.model.ClothingItem;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class AddClothingController {
     private final VBox mainVBox;
     private final List<ClothingItem> wardrobe;
+    private final MainController mainController;
 
-    public AddClothingController(VBox mainVBox, List<ClothingItem> wardrobe) {
+    public AddClothingController(VBox mainVBox, List<ClothingItem> wardrobe, MainController mainController) {
         this.mainVBox = mainVBox;
         this.wardrobe = wardrobe;
+        this.mainController = mainController;
     }
 
     public void handleAddItem() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Images", "*.jpg", "*.png", "*.jpeg"));
         fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
-        Window window = mainVBox.getScene().getWindow(); //get curr window
-        File selectedFile = fileChooser.showOpenDialog(window); //open file dialog
+        Window window = mainVBox.getScene().getWindow();
+        File selectedFile = fileChooser.showOpenDialog(window);
         if (selectedFile != null) {
             ChoiceBox<String> categoryChoiceBox = new ChoiceBox<>();
             categoryChoiceBox.getItems().addAll(
@@ -38,11 +45,12 @@ public class AddClothingController {
                     "Hat", "Belt", "Socks",
                     "Scarf", "Gloves", "Bag", "Other Accessories"
             );
-            categoryChoiceBox.setValue("Jeans"); //default category
+            categoryChoiceBox.setValue("Jeans");
             categoryChoiceBox.getSelectionModel().selectFirst();
             Label colorLabel = new Label("Choose the colours:");
             Label chosenColoursLabel = new Label("Selected colours: None");
             HBox colourOptions = new HBox(10);
+            colourOptions.setAlignment(Pos.CENTER); // Center the color buttons
             List<String> selectedColours = new ArrayList<>();
             String[] colours = {
                     "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FFA500", "#800080",
@@ -76,23 +84,29 @@ public class AddClothingController {
                     return;
                 }
                 wardrobe.add(new ClothingItem(selectedFile, category, selectedColours));
-                chosenColoursLabel.setText("Clothing item saved successfully.");
-                MainController mainController = new MainController();
-                mainController.displayWardrobe();
+                Label successLabel = new Label("Saved successfully!");
+                mainVBox.getChildren().add(successLabel);
+                new Timer().schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        javafx.application.Platform.runLater(() -> mainController.displayWardrobe());
+                    }
+                }, 500);
             });
-            //update UI
+            ImageView imageView = new ImageView(new Image(selectedFile.toURI().toString()));
+            imageView.setFitWidth(150);
+            imageView.setFitHeight(150);
             mainVBox.getChildren().clear();
-            mainVBox.getChildren().addAll(new Label("File: " +  selectedFile.getName()), new Label("Selected Category:"), categoryChoiceBox, colorLabel, colourOptions, chosenColoursLabel, saveButton);
+            mainVBox.getChildren().addAll(imageView, new Label("Selected Category:"), categoryChoiceBox, colorLabel, colourOptions, chosenColoursLabel, saveButton);
         }
     }
 
-    //helper method to find the index of the colour
     private int findColourIndex(String[] colours, String colour) {
         for (int i = 0; i < colours.length; i++) {
             if (colours[i].equals(colour)) {
                 return i;
             }
         }
-        return -1; //not found
+        return -1;
     }
 }
