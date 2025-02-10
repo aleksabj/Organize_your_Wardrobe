@@ -15,6 +15,10 @@ import java.util.List;
 import javafx.scene.control.ScrollPane;
 import com.project.model.ClothingItem;
 
+/**
+ * controller class for handling the main interactions in the Virtual Wardrobe Organizer
+ */
+
 public class MainController {
     @FXML
     private VBox mainVBox; //the root VBox container in the fxml file
@@ -32,6 +36,9 @@ public class MainController {
         displayWardrobe();
     }
 
+    /**
+     * displays the main wardrobe options on the screen
+     */
     public void displayWardrobe() {
         // clear the main VBox
         mainVBox.getChildren().clear();
@@ -72,6 +79,12 @@ public class MainController {
         AddClothingController addClothingController = new AddClothingController(mainVBox, wardrobe, this);
         addClothingController.handleAddItem();
     }
+
+    /**
+     *displays images of clothing items in the wardrobe, optionally filtered by category and colour
+     * @param categoryFilter the category to filter by, or null for no filter
+     * @param colourFilter the colors to filter by, or null for no filter
+     */
 
     private void displayImages(String categoryFilter, List<String> colourFilter) {
         mainVBox.getChildren().clear();
@@ -158,6 +171,13 @@ public class MainController {
         mainVBox.getChildren().add(container);
     }
 
+
+    /**
+     * Maps a color name to its corresponding hex code
+     * @param colorName the name of the color
+     * @return the hex code of the color
+     */
+
     private String mapColorNameToHex(String colorName) {
         String[] colorNames = {
                 "Red", "Green", "Blue", "Yellow", "Orange",
@@ -238,7 +258,11 @@ public class MainController {
         suggestionBox.getChildren().addAll(weatherLabel, outfitLabel, backButton);
         mainVBox.getChildren().add(suggestionBox);
     }
-
+    /**
+     *extracts the temperature from the weather summary
+     * @param weatherSummary the weather summary string
+     * @return the temperature as a string
+     */
     private String extractTemperatureFromSummary(String weatherSummary) {
         try {
             String searchString = "current temperature: ";
@@ -254,6 +278,12 @@ public class MainController {
         }
         return "unavailable";
     }
+
+    /**
+     * Suggests an outfit based on the temperature
+     * @param temperature the temperature as a string
+     * @return the suggested outfit
+     */
 
     private String suggestOutfitBasedOnTemperature(String temperature) {
         try {
@@ -274,6 +304,10 @@ public class MainController {
         }
     }
 
+    /**
+     * displays images of clothes that are good for the given temperature.
+     * @param temperature the temperature as an object (can be a double or a string)
+     */
     private void displayImagesForWeather(Object temperature) {
         mainVBox.getChildren().clear();
 

@@ -18,17 +18,31 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/**
+ * Class for adding a new item to the wardrobe
+ */
+
 public class AddClothingController {
     private final VBox mainVBox;
     private final List<ClothingItem> wardrobe;
     private final MainController mainController;
 
+    /**
+     * Constructor for AddClothingController
+     *
+     * @param mainVBox the main VBox container for the UI
+     * @param wardrobe the list of clothing items in the wardrobe
+     * @param mainController the main controller
+     */
     public AddClothingController(VBox mainVBox, List<ClothingItem> wardrobe, MainController mainController) {
         this.mainVBox = mainVBox;
         this.wardrobe = wardrobe;
         this.mainController = mainController;
     }
 
+    /**
+     *handles the process of adding a new item
+     */
     public void handleAddItem() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Images", "*.jpg", "*.png", "*.jpeg"));
@@ -100,6 +114,14 @@ public class AddClothingController {
             mainVBox.getChildren().addAll(imageView, new Label("Selected Category:"), categoryChoiceBox, colorLabel, colourOptions, chosenColoursLabel, saveButton);
         }
     }
+
+    /**
+     *findf the index of a colour in the array of colours
+     *
+     * @param colours the array of colours
+     * @param colour the colour to find
+     * @return the index of the colour in the array
+     */
 
     private int findColourIndex(String[] colours, String colour) {
         for (int i = 0; i < colours.length; i++) {

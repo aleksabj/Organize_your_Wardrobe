@@ -7,6 +7,11 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import java.io.IOException;
 
+/**
+ * Main class for the Virtual Wardrobe Organizer application.
+ * This class initializes and starts the JavaFX application
+ */
+
 public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
@@ -23,6 +28,10 @@ public class Main extends Application {
             System.exit(1);
         }
     }
+    /**
+     * main method to launch the JavaFX application
+     * @param args command-line arguments
+     */
     public static void main(String[] args) {
         launch(args);
     }

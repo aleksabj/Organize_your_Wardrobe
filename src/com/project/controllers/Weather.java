@@ -5,11 +5,19 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+/**
+ * Class for fetching and parsing weather data from a weather API
+ */
 public class Weather {
     private static final String WEATHER_API_URL = "http://api.weatherapi.com/v1/current.json";
     private static final String WEATHER_API_KEY = System.getenv("WeatherKey"); // Replace with your WeatherAPI key
 
-    // Fetch weather data for the given city
+    /**
+     * Fetches weather data for the given city
+     *
+     * @param city the name of the city to fetch weather data for
+     * @return a summary of the weather in the specified city
+     */
     public static String getWeatherSummary(String city) {
         try {
             // Build request URL for WeatherAPI
@@ -38,7 +46,13 @@ public class Weather {
         }
     }
 
-    //Parse the weather API response properly
+    /**
+     *parse the API response
+     *
+     * @param response the response from the weather API
+     * @param city the name of the city
+     * @return a summary of the weather in the specified city
+     */
     private static String parseWeatherData(String response, String city) {
         try {
             //extract the weather condition
@@ -57,7 +71,13 @@ public class Weather {
         }
     }
 
-    //helper method to extract a double value from a string using start and end markers
+    /**
+     *helper method to extract a double value from a string using start and end markers
+     * @param text the text to extract the double value from
+     * @param startMarker the start marker
+     * @param endMarker the end marker
+     * @return the extracted double value
+     */
     private static double extractDouble(String text, String startMarker, String endMarker) {
         try {
             int startIndex = text.indexOf(startMarker) + startMarker.length();
@@ -71,7 +91,13 @@ public class Weather {
         return 0.0;
     }
 
-    //Helper method to extract a string value from a string using start and end markers
+    /**
+     * Helper method to extract a string value from a string using start and end markers
+     * @param text the text to extract the string value from
+     * @param startMarker the start marker
+     * @param endMarker the end marker
+     * @return the extracted string value
+     */
     private static String extractString(String text, String startMarker, String endMarker) {
         try {
             int startIndex = text.indexOf(startMarker) + startMarker.length();

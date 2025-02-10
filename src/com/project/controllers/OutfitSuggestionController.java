@@ -15,6 +15,10 @@ import com.project.model.ClothingItem;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Class for handling outfit suggestions based on user preferences
+ */
+
 public class OutfitSuggestionController {
     private final VBox mainVBox;
     private final List<ClothingItem> wardrobe;
@@ -42,6 +46,7 @@ public class OutfitSuggestionController {
     );
 
     private static final Map<String, Map<String, List<String>>> COLOR_COMBINATIONS = Map.ofEntries(
+            // Colour combinations map
             Map.entry("Red", Map.of(
                     "Complementary", List.of("#00FF00"),
                     "Analogous", List.of("#FF0000", "#FFA500", "#FFFF00"),
@@ -134,6 +139,13 @@ public class OutfitSuggestionController {
             ))
     );
 
+    /**
+     * constructor for OutfitSuggestionController
+     *
+     * @param mainVBox the main VBox container for the UI
+     * @param wardrobe the list of clothing items in the wardrobe
+     * @param backButton the button to go back to the previous menu
+     */
     public OutfitSuggestionController(VBox mainVBox, List<ClothingItem> wardrobe, Button backButton) {
         this.mainVBox = mainVBox;
         this.wardrobe = wardrobe;
@@ -144,7 +156,9 @@ public class OutfitSuggestionController {
             System.out.println("Item: " + item.getCategory() + ", Colors: " + item.getColours());
         }
     }
-
+    /**
+     * Handles the outfit suggestion process
+     */
     public void handleSuggestOutfit() {
         mainVBox.getChildren().clear();
 
@@ -175,6 +189,11 @@ public class OutfitSuggestionController {
         mainVBox.getChildren().addAll(titleLabel, optionsBox, buttonBox);
     }
 
+    /**
+     *creates a ChoiceBox for selecting clothing items
+     *
+     * @return the ChoiceBox for clothing items
+     */
     private ChoiceBox<String> createItemChoiceBox() {
         ChoiceBox<String> itemChoiceBox = new ChoiceBox<>();
         itemChoiceBox.getItems().addAll(
@@ -186,6 +205,11 @@ public class OutfitSuggestionController {
         return itemChoiceBox;
     }
 
+    /**
+     * Creates a ChoiceBox for selecting colours
+     *
+     * @return the ChoiceBox for colors
+     */
     private ChoiceBox<String> createColorChoiceBox() {
         ChoiceBox<String> colorChoiceBox = new ChoiceBox<>();
         colorChoiceBox.getItems().addAll(
@@ -197,6 +221,12 @@ public class OutfitSuggestionController {
         return colorChoiceBox;
     }
 
+
+    /**
+     *creates a ChoiceBox for selecting colour combination types
+     *
+     * @return the ChoiceBox for color combination types
+     */
     private ChoiceBox<String> createCombinationChoiceBox() {
         ChoiceBox<String> combinationChoiceBox = new ChoiceBox<>();
         combinationChoiceBox.getItems().addAll(
@@ -206,6 +236,13 @@ public class OutfitSuggestionController {
         return combinationChoiceBox;
     }
 
+    /**
+     * Generates an outfit based on the selected item, color, combination type
+     *
+     * @param selectedItem the selected clothing item
+     * @param selectedColor the selected color
+     * @param combinationType the selected color combination type
+     */
     private void generateOutfit(String selectedItem, String selectedColor, String combinationType) {
         mainVBox.getChildren().clear();
 
@@ -276,6 +313,15 @@ public class OutfitSuggestionController {
         mainVBox.getChildren().add(backButton);
     }
 
+    /**
+     * Suggest items based on the selected item, color, and combination type
+     *
+     * @param selectedItem the selected clothing item
+     * @param selectedColor the selected color
+     * @param combinationType the selected color combination type
+     * @param matchingItems the list of matching items
+     * @return the list of suggested clothes
+     */
     private List<ClothingItem> suggestComplementaryItems(String selectedItem, String selectedColor, String combinationType, List<ClothingItem> matchingItems) {
         List<ClothingItem> suggestedItems = new ArrayList<>();
 
