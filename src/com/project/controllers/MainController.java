@@ -1,29 +1,28 @@
 package com.project.controllers;
 
+import com.project.database.DatabaseHelper;
+import com.project.model.ClothingItem;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.image.ImageView;
-import javafx.scene.image.Image;
+import javafx.scene.control.ScrollPane;
+
+import java.io.File;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import javafx.scene.control.ScrollPane;
-import com.project.model.ClothingItem;
-
-/**
- * controller class for handling the main interactions in the Virtual Wardrobe Organizer
- */
 
 public class MainController {
     @FXML //tied to a corresponding FXML layout file
     private VBox mainVBox; //the root VBox container in the fxml file
-
-    private final List<ClothingItem> wardrobe = new ArrayList<>();
+    private List<ClothingItem> wardrobe;
 
     @FXML
     public void initialize() {
@@ -33,16 +32,13 @@ public class MainController {
     @FXML
     public void handleStartOrganizing() {
         System.out.println("Start Organizing button clicked!");
+        wardrobe = loadClothingItemsFromDatabase();
         displayWardrobe();
     }
 
-    /**
-     * displays the main wardrobe options on the screen
-     */
     public void displayWardrobe() {
-        // clear the main VBox
         mainVBox.getChildren().clear();
-        //buttons on the main page
+
         Button viewWardrobeButton = new Button("View Your Wardrobe");
         viewWardrobeButton.setStyle("-fx-font-size: 20px; -fx-padding: 10px;");
 
@@ -57,15 +53,38 @@ public class MainController {
         checkWeather.setStyle("-fx-font-size: 20px; -fx-padding: 10px;");
         checkWeather.setOnAction(evt -> handleSuggestOutfitForWeather());
 
-        //buttons placed horizontally
         HBox wardrobeOptions = new HBox(10);
         wardrobeOptions.setAlignment(Pos.CENTER);
         wardrobeOptions.getChildren().addAll(viewWardrobeButton, createOutfitButton, checkWeather, addClothingItemButton);
 
-        //add HBox to the main VBox
-        mainVBox.getChildren().add(wardrobeOptions); //add buttons to main UI
-        addClothingItemButton.setOnAction(evt -> handleAddItem()); //assign actions foe each button
-        viewWardrobeButton.setOnAction(evt -> displayImages(null, null)); //show wardrobe without filters
+        mainVBox.getChildren().add(wardrobeOptions);
+        addClothingItemButton.setOnAction(evt -> handleAddItem());
+        viewWardrobeButton.setOnAction(evt -> displayImages(null, null));
+    }
+
+    private List<ClothingItem> loadClothingItemsFromDatabase() {
+        List<ClothingItem> items = new ArrayList<>();
+        String sql = "SELECT * FROM clothing";
+
+        try (Connection conn = DatabaseHelper.connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                File imageFile = new File(rs.getString("imagePath"));
+                ClothingItem item = new ClothingItem(
+                        imageFile,
+                        rs.getString("type"),
+                        List.of(rs.getString("color").split(","))
+                );
+                items.add(item);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error loading wardrobe: " + e.getMessage());
+        }
+
+        return items;
     }
 
     private void handleSuggestOutfit() {

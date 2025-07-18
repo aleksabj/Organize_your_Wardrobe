@@ -1,5 +1,6 @@
 package com.project.main;
 
+import com.project.database.DatabaseHelper;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -11,16 +12,15 @@ import java.io.IOException;
  * Main class for the Virtual Wardrobe Organizer application.
  * This class initializes and starts the JavaFX application
  */
-
 public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
+        DatabaseHelper.initializeDatabase(); // Initialize DB
         primaryStage.setTitle("Virtual Wardrobe Organizer");
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/project/views/MainView.fxml"));
             VBox root = loader.load();
             Scene scene = new Scene(root, 800, 600);
-            primaryStage.setTitle("Virtual Wardrobe Organizer");
             primaryStage.setScene(scene);
             primaryStage.show();
         } catch (IOException e) {
@@ -33,6 +33,12 @@ public class Main extends Application {
      * @param args command-line arguments
      */
     public static void main(String[] args) {
+        try {
+            Class.forName("org.sqlite.JDBC");
+            System.out.println("\u2705 SQLite JDBC loaded successfully!");
+        } catch (ClassNotFoundException e) {
+            System.err.println("\u274C Failed to load SQLite JDBC.");
+        }
         launch(args);
     }
 }
