@@ -23,7 +23,7 @@ import java.util.TimerTask;
  */
 
 public class AddClothingController {
-    private final VBox mainVBox;
+    private final VBox mainVBox; //its reference cannot change after initialization
     private final List<ClothingItem> wardrobe;
     private final MainController mainController;
 
@@ -46,9 +46,9 @@ public class AddClothingController {
     public void handleAddItem() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Images", "*.jpg", "*.png", "*.jpeg"));
-        fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+        fileChooser.setInitialDirectory(new File(System.getProperty("user.home"), "Desktop/clothes"));
         Window window = mainVBox.getScene().getWindow();
-        File selectedFile = fileChooser.showOpenDialog(window);
+        File selectedFile = fileChooser.showOpenDialog(window); //Stores the file the user selects
         if (selectedFile != null) {
             ChoiceBox<String> categoryChoiceBox = new ChoiceBox<>();
             categoryChoiceBox.getItems().addAll(
@@ -116,7 +116,7 @@ public class AddClothingController {
     }
 
     /**
-     *findf the index of a colour in the array of colours
+     *find the index of a colour in the array of colours
      *
      * @param colours the array of colours
      * @param colour the colour to find

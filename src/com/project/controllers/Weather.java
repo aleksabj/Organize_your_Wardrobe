@@ -25,18 +25,17 @@ public class Weather {
 
             HttpURLConnection connection = (HttpURLConnection) new URL(requestURL).openConnection();
             connection.setRequestMethod("GET");
-            connection.setRequestProperty("User-Agent", "Mozilla/5.0");
-
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0"); //The User-Agent header is specified to ensure compatibility with the API server
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                StringBuilder response = new StringBuilder();
+                StringBuilder response = new StringBuilder(); //reads line by line into a StringBuilder
                 String line;
                 while ((line = reader.readLine()) != null) {
                     response.append(line);
                 }
                 reader.close();
-                return parseWeatherData(response.toString(), city);
+                return parseWeatherData(response.toString(), city); //Passes the response string to parseWeatherData for formatting
             } else {
                 return "Unable to fetch weather data.";
             }
@@ -47,7 +46,7 @@ public class Weather {
     }
 
     /**
-     *parse the API response
+     *takes the raw API response and the city name as input, returning a formatted weather summary.
      *
      * @param response the response from the weather API
      * @param city the name of the city
@@ -55,7 +54,7 @@ public class Weather {
      */
     private static String parseWeatherData(String response, String city) {
         try {
-            //extract the weather condition
+            //extract the weather condition(for example, "sunny", "cloudy", etc.)
             String condition = extractString(response, "\"text\":\"", "\"");
 
             //extract the temperature

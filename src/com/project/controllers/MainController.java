@@ -20,7 +20,7 @@ import com.project.model.ClothingItem;
  */
 
 public class MainController {
-    @FXML
+    @FXML //tied to a corresponding FXML layout file
     private VBox mainVBox; //the root VBox container in the fxml file
 
     private final List<ClothingItem> wardrobe = new ArrayList<>();
@@ -63,8 +63,8 @@ public class MainController {
         wardrobeOptions.getChildren().addAll(viewWardrobeButton, createOutfitButton, checkWeather, addClothingItemButton);
 
         //add HBox to the main VBox
-        mainVBox.getChildren().add(wardrobeOptions);
-        addClothingItemButton.setOnAction(evt -> handleAddItem());
+        mainVBox.getChildren().add(wardrobeOptions); //add buttons to main UI
+        addClothingItemButton.setOnAction(evt -> handleAddItem()); //assign actions foe each button
         viewWardrobeButton.setOnAction(evt -> displayImages(null, null)); //show wardrobe without filters
     }
 
@@ -72,12 +72,12 @@ public class MainController {
         Button backButton = new Button("Back to Main Menu");
         backButton.setOnAction(evt -> displayWardrobe());
         OutfitSuggestionController outfitSuggestionController = new OutfitSuggestionController(mainVBox, wardrobe, backButton);
-        outfitSuggestionController.handleSuggestOutfit();
+        outfitSuggestionController.handleSuggestOutfit(); // Delegates suggesting outfit functionality.
     }
 
     private void handleAddItem() {
         AddClothingController addClothingController = new AddClothingController(mainVBox, wardrobe, this);
-        addClothingController.handleAddItem();
+        addClothingController.handleAddItem(); // Delegates adding clothing functionality.
     }
 
     /**
@@ -149,8 +149,8 @@ public class MainController {
         HBox imagesHBox = new HBox(10);
         imagesHBox.setAlignment(Pos.CENTER);
 
-        for (ClothingItem item : filteredItems) {
-            ImageView imageView = new ImageView(new Image(item.getImageFile().toURI().toString()));
+        for (ClothingItem item : filteredItems) { //Loops through the filtered clothing items.
+            ImageView imageView = new ImageView(new Image(item.getImageFile().toURI().toString())); //Converts the item's image file URI to a string and creates an image object.
             imageView.setFitWidth(150);
             imageView.setFitHeight(150);
             imagesHBox.getChildren().add(imageView);
@@ -347,7 +347,7 @@ public class MainController {
 
         HBox imagesHBox = new HBox(10);
         imagesHBox.setAlignment(Pos.CENTER);
-
+        //Loops through filtered clothing items and displays their images in an HBox
         for (ClothingItem item : filteredItems) {
             ImageView imageView = new ImageView(new Image(item.getImageFile().toURI().toString()));
             imageView.setFitWidth(150);

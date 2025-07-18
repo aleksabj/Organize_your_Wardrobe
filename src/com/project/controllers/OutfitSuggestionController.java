@@ -246,9 +246,9 @@ public class OutfitSuggestionController {
     private void generateOutfit(String selectedItem, String selectedColor, String combinationType) {
         mainVBox.getChildren().clear();
 
-        //convert the color to uppercase hex code for matching (case-insensitive)
+        //convert the color to uppercase hex code for matching (case-insensitive) that teb user chose
         String selectedColorHex = COLOR_NAME_TO_HEX.getOrDefault(selectedColor, selectedColor).toUpperCase();
-
+        //select items from the wardrobe that match the selected category
         List<ClothingItem> matchingItems = wardrobe.stream()
                 .filter(item -> item.getCategory().equalsIgnoreCase(selectedItem))
                 .filter(item -> item.getColours().stream()
@@ -270,6 +270,7 @@ public class OutfitSuggestionController {
         HBox matchingItemsHBox = new HBox(10);
         matchingItemsHBox.setAlignment(Pos.CENTER);
 
+        //Iterates over matching items, creating an ImageView for each image file and adding them to the horizontal box.
         for (ClothingItem item : matchingItems) {
             ImageView imageView = new ImageView(new Image(item.getImageFile().toURI().toString()));
             imageView.setFitWidth(150);
@@ -284,7 +285,9 @@ public class OutfitSuggestionController {
 
         mainVBox.getChildren().add(matchingItemsScrollPane);
 
+        // Calls suggestComplementaryItems to get a list of suggested items based on the selected parameters.
         List<ClothingItem> suggestedItems = suggestComplementaryItems(selectedItem, selectedColor, combinationType, matchingItems);
+        //If suggestions exist, a styled title label is added.
         if (!suggestedItems.isEmpty()) {
             Label suggestionLabel = new Label("Suggested complementary items:");
             suggestionLabel.setStyle("-fx-font-size: 16px; -fx-padding: 10px;");
@@ -292,7 +295,7 @@ public class OutfitSuggestionController {
 
             HBox suggestedItemsHBox = new HBox(10);
             suggestedItemsHBox.setAlignment(Pos.CENTER);
-
+            //Similar to matching items, adds images of complementary items to an HBox
             for (ClothingItem item : suggestedItems) {
                 ImageView imageView = new ImageView(new Image(item.getImageFile().toURI().toString()));
                 imageView.setFitWidth(150);
@@ -324,7 +327,7 @@ public class OutfitSuggestionController {
      */
     private List<ClothingItem> suggestComplementaryItems(String selectedItem, String selectedColor, String combinationType, List<ClothingItem> matchingItems) {
         List<ClothingItem> suggestedItems = new ArrayList<>();
-
+        //Using the selectedColor and combinationType, it retrieves a list of appropriate hex color codes from the COLOR_COMBINATIONS map. If no matches are found, it defaults to an empty list.
         List<String> colorHexes = COLOR_COMBINATIONS.getOrDefault(selectedColor, Collections.emptyMap())
                 .getOrDefault(combinationType, Collections.emptyList());
 
