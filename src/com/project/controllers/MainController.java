@@ -55,12 +55,26 @@ public class MainController {
 
         HBox wardrobeOptions = new HBox(10);
         wardrobeOptions.setAlignment(Pos.CENTER);
-        wardrobeOptions.getChildren().addAll(viewWardrobeButton, createOutfitButton, checkWeather, addClothingItemButton);
+        Button packingListButton = new Button("Packing List");
+        packingListButton.setStyle("-fx-font-size: 20px; -fx-padding: 10px;");
+        packingListButton.setOnAction(evt -> handlePackingList());
+
+        wardrobeOptions.getChildren().addAll(
+                viewWardrobeButton, createOutfitButton, checkWeather,
+                packingListButton, addClothingItemButton
+        );
+
 
         mainVBox.getChildren().add(wardrobeOptions);
         addClothingItemButton.setOnAction(evt -> handleAddItem());
         viewWardrobeButton.setOnAction(evt -> displayImages(null, null));
     }
+
+    private void handlePackingList() {
+        PackingListController controller = new PackingListController(mainVBox, wardrobe);
+        controller.showPackingListsPage();
+    }
+
 
     private List<ClothingItem> loadClothingItemsFromDatabase() {
         List<ClothingItem> items = new ArrayList<>();
