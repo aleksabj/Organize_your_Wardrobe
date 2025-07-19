@@ -21,10 +21,12 @@ import java.util.List;
 public class PackingListController {
     private final VBox mainVBox;
     private final List<ClothingItem> wardrobe;
+    private final MainController mainController;
 
-    public PackingListController(VBox mainVBox, List<ClothingItem> wardrobe) {
+    public PackingListController(VBox mainVBox, List<ClothingItem> wardrobe, MainController mainController) {
         this.mainVBox = mainVBox;
         this.wardrobe = wardrobe;
+        this.mainController = mainController;
     }
 
     public void showPackingListsPage() {
@@ -63,10 +65,7 @@ public class PackingListController {
         addButton.setOnAction(e -> showPackingListCreator());
 
         Button backButton = new Button("Back to Main Menu");
-        backButton.setOnAction(evt -> {
-            mainVBox.getChildren().clear();
-            new MainController().handleStartOrganizing();
-        });
+        backButton.setOnAction(evt -> mainController.displayWardrobe());
 
         VBox container = new VBox(20, title, listFlowPane, addButton, backButton);
         container.setAlignment(Pos.CENTER);
@@ -112,19 +111,19 @@ public class PackingListController {
             String emoji = emojiPicker.getValue();
 
             if (name.isEmpty() || emoji == null) {
-                feedbackLabel.setText("❌ Name and emoji are required.");
+                feedbackLabel.setText("Name and emoji are required.");
                 return;
             }
 
             PackingList list = new PackingList(name, emoji);
             for (int i = 0; i < checkBoxes.size(); i++) {
                 if (checkBoxes.get(i).isSelected()) {
-                    list.addClothingItemId(i + 1); // assumes ID = index + 1
+                    list.addClothingItemId(i + 1);
                 }
             }
 
             DatabaseHelper.savePackingList(list);
-            feedbackLabel.setText("✅ Packing list saved!");
+            feedbackLabel.setText("Packing list saved!");
 
             PauseTransition pause = new PauseTransition(Duration.seconds(2));
             pause.setOnFinished(e -> showPackingListsPage());

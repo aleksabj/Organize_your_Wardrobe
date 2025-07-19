@@ -6,6 +6,9 @@ import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+
 
 /**
  * Helper class for managing SQLite database connection and initialization.
@@ -120,4 +123,102 @@ public class DatabaseHelper {
 
         return lists;
     }
+
+
+    // --- Statistics Queries ---
+
+    public static int getTotalPackingLists() {
+        String sql = "SELECT COUNT(*) FROM packing_lists";
+        try (Connection conn = connect(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting total packing lists: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    public static double getAverageItemsPerPackingList() {
+        String sql = """
+        SELECT AVG(item_count) FROM (
+            SELECT COUNT(*) AS item_count 
+            FROM packing_list_items 
+            GROUP BY list_id
+        );
+    """;
+        try (Connection conn = connect(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getDouble(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error calculating average items per packing list: " + e.getMessage());
+        }
+        return 0;
+    }
+
+
+    public static String getMostCommonColor() {
+        String sql = """
+        SELECT color, COUNT(*) AS count
+        FROM clothing
+        GROUP BY color
+        ORDER BY count DESC
+        LIMIT 1;
+    """;
+        try (Connection conn = connect(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("color");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting most common color: " + e.getMessage());
+        }
+        return "N/A";
+    }
+
+
+    // Count clothing items by category/type
+    public static Map<String, Integer> getItemCountsByCategory() {
+        Map<String, Integer> counts = new HashMap<>();
+        String sql = "SELECT type, COUNT(*) as count FROM clothing GROUP BY type";
+
+        try (Connection conn = connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                counts.put(rs.getString("type"), rs.getInt("count"));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error counting items by category: " + e.getMessage());
+        }
+
+        return counts;
+    }
+
+    // Count clothing items by color
+    public static Map<String, Integer> getColorCounts() {
+        Map<String, Integer> counts = new HashMap<>();
+        String sql = "SELECT color FROM clothing";
+
+        try (Connection conn = connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                String[] colors = rs.getString("color").split(",");
+                for (String color : colors) {
+                    color = color.trim();
+                    counts.put(color, counts.getOrDefault(color, 0) + 1);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error counting colors: " + e.getMessage());
+        }
+
+        return counts;
+    }
+
+
 }

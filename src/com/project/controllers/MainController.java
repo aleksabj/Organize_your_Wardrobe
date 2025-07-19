@@ -7,17 +7,13 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.scene.control.ScrollPane;
-
+import javafx.scene.layout.*;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class MainController {
     @FXML //tied to a corresponding FXML layout file
@@ -41,9 +37,7 @@ public class MainController {
 
         Button viewWardrobeButton = new Button("View Your Wardrobe");
         viewWardrobeButton.setStyle("-fx-font-size: 20px; -fx-padding: 10px;");
-
-        Button addClothingItemButton = new Button("+");
-        addClothingItemButton.setStyle("-fx-font-size: 20px; -fx-padding: 10px;");
+        viewWardrobeButton.setOnAction(evt -> displayImages(null, null));
 
         Button createOutfitButton = new Button("Create an Outfit");
         createOutfitButton.setStyle("-fx-font-size: 20px; -fx-padding: 10px;");
@@ -53,28 +47,40 @@ public class MainController {
         checkWeather.setStyle("-fx-font-size: 20px; -fx-padding: 10px;");
         checkWeather.setOnAction(evt -> handleSuggestOutfitForWeather());
 
-        HBox wardrobeOptions = new HBox(10);
-        wardrobeOptions.setAlignment(Pos.CENTER);
         Button packingListButton = new Button("Packing List");
         packingListButton.setStyle("-fx-font-size: 20px; -fx-padding: 10px;");
         packingListButton.setOnAction(evt -> handlePackingList());
 
-        wardrobeOptions.getChildren().addAll(
-                viewWardrobeButton, createOutfitButton, checkWeather,
-                packingListButton, addClothingItemButton
-        );
+        Button statsButton = new Button("📊 Stats");
+        statsButton.setStyle("-fx-font-size: 20px; -fx-padding: 10px;");
+        statsButton.setOnAction(evt -> {
+            StatisticsController statsController = new StatisticsController(mainVBox, this);
+            statsController.showStatistics();
+        });
 
-
-        mainVBox.getChildren().add(wardrobeOptions);
+        Button addClothingItemButton = new Button("+");
+        addClothingItemButton.setStyle("-fx-font-size: 20px; -fx-padding: 10px;");
         addClothingItemButton.setOnAction(evt -> handleAddItem());
-        viewWardrobeButton.setOnAction(evt -> displayImages(null, null));
+
+        HBox row1 = new HBox(10);
+        row1.setAlignment(Pos.CENTER);
+        row1.getChildren().addAll(viewWardrobeButton, createOutfitButton, checkWeather);
+
+        HBox row2 = new HBox(10);
+        row2.setAlignment(Pos.CENTER);
+        row2.getChildren().addAll(packingListButton, statsButton, addClothingItemButton);
+
+        VBox buttonLayout = new VBox(15);
+        buttonLayout.setAlignment(Pos.CENTER);
+        buttonLayout.getChildren().addAll(row1, row2);
+
+        mainVBox.getChildren().add(buttonLayout);
     }
 
     private void handlePackingList() {
-        PackingListController controller = new PackingListController(mainVBox, wardrobe);
+        PackingListController controller = new PackingListController(mainVBox, wardrobe, this);
         controller.showPackingListsPage();
     }
-
 
     private List<ClothingItem> loadClothingItemsFromDatabase() {
         List<ClothingItem> items = new ArrayList<>();
@@ -105,19 +111,13 @@ public class MainController {
         Button backButton = new Button("Back to Main Menu");
         backButton.setOnAction(evt -> displayWardrobe());
         OutfitSuggestionController outfitSuggestionController = new OutfitSuggestionController(mainVBox, wardrobe, backButton);
-        outfitSuggestionController.handleSuggestOutfit(); // Delegates suggesting outfit functionality.
+        outfitSuggestionController.handleSuggestOutfit();
     }
 
     private void handleAddItem() {
         AddClothingController addClothingController = new AddClothingController(mainVBox, wardrobe, this);
-        addClothingController.handleAddItem(); // Delegates adding clothing functionality.
+        addClothingController.handleAddItem();
     }
-
-    /**
-     *displays images of clothing items in the wardrobe, optionally filtered by category and colour
-     * @param categoryFilter the category to filter by, or null for no filter
-     * @param colourFilter the colors to filter by, or null for no filter
-     */
 
     private void displayImages(String categoryFilter, List<String> colourFilter) {
         mainVBox.getChildren().clear();
@@ -164,7 +164,6 @@ public class MainController {
                 applyFilterButton
         );
 
-        //filtering logic
         List<ClothingItem> filteredItems = wardrobe.stream()
                 .filter(item -> (categoryFilter == null || item.getCategory().equals(categoryFilter)))
                 .filter(item -> {
@@ -178,38 +177,27 @@ public class MainController {
                 })
                 .toList();
 
-        //display images in an HBox
         HBox imagesHBox = new HBox(10);
         imagesHBox.setAlignment(Pos.CENTER);
 
-        for (ClothingItem item : filteredItems) { //Loops through the filtered clothing items.
-            ImageView imageView = new ImageView(new Image(item.getImageFile().toURI().toString())); //Converts the item's image file URI to a string and creates an image object.
+        for (ClothingItem item : filteredItems) {
+            ImageView imageView = new ImageView(new Image(item.getImageFile().toURI().toString()));
             imageView.setFitWidth(150);
             imageView.setFitHeight(150);
             imagesHBox.getChildren().add(imageView);
         }
 
-        //wrap the HBox in a ScrollPane
         ScrollPane scrollPane = new ScrollPane(imagesHBox);
         scrollPane.setFitToHeight(true);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
-        //add back button
         Button backButton = new Button("Back to Main Menu");
         backButton.setOnAction(evt -> displayWardrobe());
 
-        //add all components to the main container
         container.getChildren().addAll(filterBox, scrollPane, backButton);
         mainVBox.getChildren().add(container);
     }
-
-
-    /**
-     * Maps a color name to its corresponding hex code
-     * @param colorName the name of the color
-     * @return the hex code of the color
-     */
 
     private String mapColorNameToHex(String colorName) {
         String[] colorNames = {
@@ -240,44 +228,35 @@ public class MainController {
         dialog.setContentText("City:");
         dialog.showAndWait().ifPresent(city -> {
             if (!city.trim().isEmpty()) {
-                // fetch weather summary from the weather class
                 String weatherSummary = Weather.getWeatherSummary(city.trim());
                 if (!weatherSummary.isEmpty()) {
-                    // City found, display weather summary and outfit
                     displayWeatherSummaryAndOutfit(weatherSummary, city.trim());
                 } else {
-                    //city was not found
-                    Label errorLabel = new Label("The city is not found. You entered \"" + city + "\", maybe you miswrote it. Check and try once again.");
-                    Button backButton = new Button("Back to Main Menu");
-                    backButton.setOnAction(evt -> displayWardrobe());
-                    mainVBox.getChildren().clear();
-                    mainVBox.getChildren().addAll(errorLabel, backButton);
+                    showError("The city is not found. You entered \"" + city + "\". Please try again.");
                 }
             } else {
-                // empty city name
-                Label errorLabel = new Label("City name is invalid. Please try again.");
-                Button backButton = new Button("Back to Main Menu");
-                backButton.setOnAction(evt -> displayWardrobe());
-                mainVBox.getChildren().clear();
-                mainVBox.getChildren().addAll(errorLabel, backButton);
+                showError("City name is invalid. Please try again.");
             }
         });
     }
 
+    private void showError(String message) {
+        Label errorLabel = new Label(message);
+        Button backButton = new Button("Back to Main Menu");
+        backButton.setOnAction(evt -> displayWardrobe());
+        mainVBox.getChildren().clear();
+        mainVBox.getChildren().addAll(errorLabel, backButton);
+    }
+
     private void displayWeatherSummaryAndOutfit(String weatherSummary, String city) {
         mainVBox.getChildren().clear();
-        // display the full weather summary
         Label weatherLabel = new Label("Weather Summary: " + weatherSummary);
         weatherLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
-        // extract temperature as string
         String temperature = extractTemperatureFromSummary(weatherSummary);
-        // suggest outfit based on temperature
         String outfitSuggestion = suggestOutfitBasedOnTemperature(temperature);
-        // display the outfit suggestion
         Label outfitLabel = new Label("Based on this, we suggest you wear: " + outfitSuggestion);
         outfitLabel.setStyle("-fx-font-size: 14px;");
 
-        // show items in the wardrobe based on temperature
         if (temperature.equals("unavailable") || temperature.equals("-")) {
             displayImagesForWeather("-");
         } else {
@@ -291,11 +270,7 @@ public class MainController {
         suggestionBox.getChildren().addAll(weatherLabel, outfitLabel, backButton);
         mainVBox.getChildren().add(suggestionBox);
     }
-    /**
-     *extracts the temperature from the weather summary
-     * @param weatherSummary the weather summary string
-     * @return the temperature as a string
-     */
+
     private String extractTemperatureFromSummary(String weatherSummary) {
         try {
             String searchString = "current temperature: ";
@@ -311,12 +286,6 @@ public class MainController {
         }
         return "unavailable";
     }
-
-    /**
-     * Suggests an outfit based on the temperature
-     * @param temperature the temperature as a string
-     * @return the suggested outfit
-     */
 
     private String suggestOutfitBasedOnTemperature(String temperature) {
         try {
@@ -337,22 +306,13 @@ public class MainController {
         }
     }
 
-    /**
-     * displays images of clothes that are good for the given temperature.
-     * @param temperature the temperature as an object (can be a double or a string)
-     */
     private void displayImagesForWeather(Object temperature) {
         mainVBox.getChildren().clear();
 
         VBox imagesContainer = new VBox(10);
         imagesContainer.setAlignment(Pos.CENTER);
 
-        Label temperatureLabel;
-        if (temperature.equals("-")) {
-            temperatureLabel = new Label("Temperature: -");
-        } else {
-            temperatureLabel = new Label("Temperature: " + temperature + "°C");
-        }
+        Label temperatureLabel = new Label("Temperature: " + temperature + (temperature.equals("-") ? "" : "°C"));
         temperatureLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
 
         List<ClothingItem> filteredItems;
@@ -364,15 +324,15 @@ public class MainController {
                     .filter(item -> {
                         String category = item.getCategory();
                         if (tempValue >= 30) {
-                            return category.equals("T-Shirt") || category.equals("Shorts") || category.equals("Shirt") || category.equals("Sandals") || category.equals("Pants") || category.equals("Dress") || category.equals("Hat");
+                            return List.of("T-Shirt", "Shorts", "Shirt", "Sandals", "Pants", "Dress", "Hat").contains(category);
                         } else if (tempValue >= 20) {
-                            return category.equals("T-Shirt") || category.equals("Jeans") || category.equals("Shirt") || category.equals("Skirt") || category.equals("Dress") || category.equals("Sneakers") || category.equals("Pants");
+                            return List.of("T-Shirt", "Jeans", "Shirt", "Skirt", "Dress", "Sneakers", "Pants").contains(category);
                         } else if (tempValue >= 10) {
-                            return category.equals("Sweater") || category.equals("Pants") || category.equals("Light Jacket");
+                            return List.of("Sweater", "Pants", "Light Jacket").contains(category);
                         } else if (tempValue >= 0) {
-                            return category.equals("Winter Jacket") || category.equals("Sweater") || category.equals("Boots") || category.equals("Gloves");
+                            return List.of("Winter Jacket", "Sweater", "Boots", "Gloves").contains(category);
                         } else {
-                            return category.equals("Heavy Coat") || category.equals("Boots") || category.equals("Scarf") || category.equals("Gloves");
+                            return List.of("Heavy Coat", "Boots", "Scarf", "Gloves").contains(category);
                         }
                     })
                     .toList();
@@ -380,13 +340,13 @@ public class MainController {
 
         HBox imagesHBox = new HBox(10);
         imagesHBox.setAlignment(Pos.CENTER);
-        //Loops through filtered clothing items and displays their images in an HBox
         for (ClothingItem item : filteredItems) {
             ImageView imageView = new ImageView(new Image(item.getImageFile().toURI().toString()));
             imageView.setFitWidth(150);
             imageView.setFitHeight(150);
             imagesHBox.getChildren().add(imageView);
         }
+
         if (filteredItems.isEmpty()) {
             Label noItemsLabel = new Label("No matching wardrobe items found for the current weather.");
             noItemsLabel.setStyle("-fx-font-size: 14px; -fx-font-style: italic;");
